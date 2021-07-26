@@ -28,7 +28,7 @@ RAW_DATA_DIR のトレーニングデータ・テストデータを
 ## 前処理 part 3
 
 ```matlab
-> run('MusicComposerClassification_preprocess.mlx')
+> run('RULPrediction_preprocess.mlx')
 ```
 上で分割したファイルに対して特徴量抽出処理を行い結果（`trainFeatures.mat` と `testFeatures.mat`）
 を PROCESSED_DATA_DIR に保存。
@@ -36,7 +36,7 @@ RAW_DATA_DIR のトレーニングデータ・テストデータを
 ## 学習
 
 ```matlab
-> run('MusicComposerClassification_train.mlx')
+> run('RULPrediction_train.mlx')
 ```
 
 PROCESSED_DATA_DIR の `trainFeatures.mat` を読み込みモデルの学習を行い、
@@ -46,7 +46,7 @@ PROCESSED_DATA_DIR の `trainFeatures.mat` を読み込みモデルの学習を�
 ## 予測
 
 ```matlab
-> run('MusicComposerClassification_predict.mlx')
+> run('RULPrediction_predict.mlx')
 ```
 
 PROCESSED_DATA_DIR の `testFeatures.mat`、MODEL_DIR からモデル（`modelknn.mat`）
