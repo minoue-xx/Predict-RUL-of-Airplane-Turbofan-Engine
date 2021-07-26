@@ -1,0 +1,6 @@
+{"RAW_DATA_DIR": "../data/",
+"PROCESSED_DATA_DIR": "../data/processed/",
+"TRAIN_PROCESSED_DIR": "../data/processed/train",
+"TEST_PROCESSED_DIR": "../data/processed/test",
+"MODEL_DIR": "../models/",
+"SUBMISSION_DIR": "../submissions/"}

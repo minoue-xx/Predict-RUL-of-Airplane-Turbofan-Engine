@@ -1,0 +1,11 @@
+.
+./code
+./data
+./data/test
+./data/train
+./data/processed
+./data/processed/test
+./data/processed/train
+./models
+./submissions
+./MusingComposerClassification_full_images
