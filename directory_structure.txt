@@ -6,4 +6,4 @@
 ./data/processed
 ./models
 ./submissions
-./RULPrediction_full_images
+./RULPrediction_images

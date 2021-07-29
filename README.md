@@ -2,13 +2,13 @@
 Copyright 2021 Michio Inoue
 
 実行内容（前処理、学習、予測）については
-[RULPrediction_full.md](./RULPrediction_full.md)
+[RULPrediction.md](./RULPrediction.md)
 を確認ください。
 
 # 環境
 
-- OS: Microsoft Windows 10 Enterprise Version 10.0 (Build 19042)
-- CPU: Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz   2.11 GHz
+- OS: macOS Big Sur Version: 11.3.1 
+- CPU: Apple M1
 - RAM: 16.0 GB
 
 # 使用ツール
@@ -43,9 +43,12 @@ run('RULPrediction_predict.mlx')
 
 上の手順で生成されるファイルはそれぞれ
 
-- データ（`xxxx.mat`）は `PROCESSED_DATA_DIR`
-- トレーニングデータの特徴量 `xxx.mat` は `PROCESSED_DATA_DIR`
-- テストデータの特徴量 `test.mat` は `PROCESSED_DATA_DIR`
+- 元データを整形したデータ（`train_*_.mat`, `train_*Unwrap_.mat`, 
+`train_*Unwrap_OtherParam.mat', `test_*_.mat`, `test_*Unwrap_.mat`, 
+`test_*Unwrap_OtherParam.mat', ）
+は `PROCESSED_DATA_DIR`
+- トレーニングデータの特徴量 `trainData.mat` は `PROCESSED_DATA_DIR`
+- テストデータの特徴量 `testData.mat` は `PROCESSED_DATA_DIR`
 - 予測モデル `model.mat` は `MODEL_DIR`
 
 に事前に保存していますので、以下のスクリプトを実行することで予測のみを実施可能です。
@@ -57,21 +60,36 @@ run('RULPrediction_predict.mlx')
 
 # コードが実行時に前提とする条件
 
-`RAW_DATA_DIR`（settings.jsonで指定）に `test.csv`、`train.csv` 、
-そして `RAW_DATA_DIR` 以下の `/train/` にトレーニングデータ、`/test/` にテストデータがあることを想定しています。
+`RAW_DATA_DIR`（settings.jsonで指定）以下の `/train/` に
+トレーニングデータ (`train_*.csv`)、`/test/` にテストデータ (`test_*.csv`) があることを想定しています。
 
 # コードの重要な副作用
 
 ```matlab
 run('loadData.mlx')
-run('RULPrediction_preprocess.mlx')
-run('RULPrediction_train.mlx')
 ```
 
 は事前に保存している以下のファイルを上書きします。
 
-- ファイル名・作曲家情報などのデータ（`train.mat`）in `PROCESSED_DATA_DIR`
-- トレーニングデータの特徴量 `trainFeatures.mat` in `PROCESSED_DATA_DIR`
-- テストデータの特徴量 `testFeatures.mat` in `PROCESSED_DATA_DIR`
-- 予測モデル `modelknn.mat` in `MODEL_DIR`
+- 元データを整形したデータ（`train_*_.mat`, `train_*Unwrap_.mat`, 
+`test_*_.mat`, `test_*Unwrap_.mat`）in `PROCESSED_DATA_DIR`
+
+```matlab
+run('RULPrediction_preprocess.mlx')
+```
+
+は事前に保存している以下のファイルを上書きします。
+
+- 元データを整形したデータ（`train_*Unwrap_OtherParam.mat', 
+`test_*Unwrap_OtherParam.mat'）in `PROCESSED_DATA_DIR`
+- トレーニングデータの特徴量 `trainData.mat` in `PROCESSED_DATA_DIR`
+- テストデータの特徴量 `testData.mat` in `PROCESSED_DATA_DIR`
+
+
+```matlab
+run('RULPrediction_train.mlx')
+```
+は事前に保存している以下のファイルを上書きします。
+
+- 予測モデル `model.mat` in `MODEL_DIR`
 

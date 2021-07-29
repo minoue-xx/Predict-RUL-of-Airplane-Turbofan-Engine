@@ -1,4 +1,7 @@
 function error = myBayesGroup(vars,trainData, DSUnitID)
+% Copyright 2021 Michio Inoue
+% アンサンブル回帰木のベイズ最適化用の目的関数
+% 5分割の交差検証
 
 groups = unique(DSUnitID);
 hpartition = cvpartition(length(groups),'KFold',5);

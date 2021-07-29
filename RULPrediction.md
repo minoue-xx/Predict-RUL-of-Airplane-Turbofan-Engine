@@ -1,7 +1,8 @@
 # 航空機ターボエンジンの残存耐用時間（RUL）予測
-  
 
-論文で Model Health Parameters と紹介されている変数を使用する。
+Copyright 2021 Michio Inoue
+
+このコードでは論文で Model Health Parameters と紹介されている変数と、エンジンの状態評価に使用される変数として次の４つも使用する。T48, SmFan, SmLPC, SmHPC
 
 At present, the N-CMAPSS dataset contains eight sets of data from 128 units and seven different failure modes affecting the flow (F) and/or efficiency (E) of all the rotating sub-components. Table 2 provides an overview of flight classes and failure modes for each of the sets of data provided 
 
@@ -53,7 +54,6 @@ DS (Data Set?) 名定義
 ```matlab:Code
 fileID = ["DS01-005", "DS02-006", "DS03-012", "DS04", "DS05", ...
     "DS06", "DS07", "DS08a-009", "DS08c-008"];
-
 ```
 
 変数名: 各 cycle での平均値を使用するので、平均値の変数名定義
@@ -122,7 +122,7 @@ end
 
    1.  Model Health Parameter は DS によって値を持つ変数が異なることが論文に記載されている。ただ DS02-006 の Unit 2, 5, 10 については１つの Health Parameter だけに変動が見られ、DS01-005 と同じ様相であるため、変数 DS は DS01-005 とする。 
    1.  また RUL が 100 である unit は、100 回目の実験で打ち切られた（すなわちまだ寿命ではない）データである可能性があるため、Fc = 1 のケース（本来寿命が長くなりがちのケース）で RUL = 100 のデータは学習データから取り除く。 
-   1.  その他 Health Parameter の値については移動平均で滑らかにする、初期変動分を調整する、傾きだけを別途評価するための変数を作成するなどの処理をする。 
+   1.  その他 Health Parameter の値については移動平均で滑らかにする、初期変動分を調整する、abnormal degredation 時（hs = 0）の傾きだけを別途評価するための変数を作成するなどの処理をする。 
 
 ```matlab:Code
 trainData = [];
@@ -185,7 +185,7 @@ for ii=1:length(fileID)
         dTrainUnwrap.p1(jj) = p(1);
         dTrainUnwrap.p2(jj) = p(2);
 
-        trainData = [trainData; dUnit];
+        trainData = [trainData; dUnit]; %#ok<AGROW> 
 
     end
 
@@ -229,7 +229,7 @@ for ii=1:length(fileID)
         dTestUnwrap.data{jj} =  dUnit;
         dTestUnwrap.p1(jj) = p(1);
         dTestUnwrap.p2(jj) = p(2);
-        testData = [testData; dUnit];
+        testData = [testData; dUnit]; %#ok<AGROW> 
 
     end
 end
@@ -293,7 +293,7 @@ mdl = fitrensemble(trainData,'Y','OptimizeHyperparameters','auto');
 ただ、今回は同じ unit からのデータが学習用・検証用データ両方に存在しないように分ける必要があるので、以下のコード。
 
 ```matlab:Code
-rng(0)
+rng(0)% 乱数シード固定（再現用）
 NumObservations = height(subtrainData); % データ数
 NumPredictors = width(subtrainData)-1; % 説明変数の数
 
@@ -380,8 +380,8 @@ results = bayesopt(fun,vars,'UseParallel',false,...
 |   50 | Accept |       3.922 |      3.7205 |      3.7037 |       3.822 |          Bag |          165 |    0.0027115 |           58 |
 ```
 
-![/Users/michio/Desktop/PHM/toshare/code/RULPrediction_images/figure_0.png
-](RULPrediction_images//Users/michio/Desktop/PHM/toshare/code/RULPrediction_images/figure_0.png
+![/Users/michio/Desktop/PHM/toshare/RULPrediction_images/figure_0.png
+](RULPrediction_images//Users/michio/Desktop/PHM/toshare/RULPrediction_images/figure_0.png
 )
 
 ```text:Output
@@ -467,8 +467,8 @@ plot(trainData.Y,'-')
 hold off
 ```
 
-![/Users/michio/Desktop/PHM/toshare/code/RULPrediction_images/figure_1.png
-](RULPrediction_images//Users/michio/Desktop/PHM/toshare/code/RULPrediction_images/figure_1.png
+![/Users/michio/Desktop/PHM/toshare/RULPrediction_images/figure_1.png
+](RULPrediction_images//Users/michio/Desktop/PHM/toshare/RULPrediction_images/figure_1.png
 )
 
 # 学習データに対しての精度検証２
@@ -578,6 +578,8 @@ sqrt((mean((tmp.Y(1:48)-Cfix).^2)))
 ans = 0
 ```
 
+特徴量作成（Model Health Parameters の傾き）を計算（最適化を用いて曲線近似）するために使用する目的関数。
+
 ```matlab:Code
 function errors = myfun(x,data)
 
@@ -585,7 +587,6 @@ a = x(1);
 b = x(2);
 
 yfit = 1-exp((a*data(:,1)).^b);
-% yfit = 1-a*exp(data(:,1).^b);
 errors = norm(data(:,2)-yfit);
 
 end
