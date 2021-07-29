@@ -44,8 +44,8 @@ run('RULPrediction_predict.mlx')
 上の手順で生成されるファイルはそれぞれ
 
 - 元データを整形したデータ（`train_*_.mat`, `train_*Unwrap_.mat`, 
-`train_*Unwrap_OtherParam.mat', `test_*_.mat`, `test_*Unwrap_.mat`, 
-`test_*Unwrap_OtherParam.mat', ）
+`train_*Unwrap_OtherParam.mat`, `test_*_.mat`, `test_*Unwrap_.mat`, 
+`test_*Unwrap_OtherParam.mat`, ）
 は `PROCESSED_DATA_DIR`
 - トレーニングデータの特徴量 `trainData.mat` は `PROCESSED_DATA_DIR`
 - テストデータの特徴量 `testData.mat` は `PROCESSED_DATA_DIR`
@@ -80,8 +80,8 @@ run('RULPrediction_preprocess.mlx')
 
 は事前に保存している以下のファイルを上書きします。
 
-- 元データを整形したデータ（`train_*Unwrap_OtherParam.mat', 
-`test_*Unwrap_OtherParam.mat'）in `PROCESSED_DATA_DIR`
+- 元データを整形したデータ（`train_*Unwrap_OtherParam.mat`, 
+`test_*Unwrap_OtherParam.mat`）in `PROCESSED_DATA_DIR`
 - トレーニングデータの特徴量 `trainData.mat` in `PROCESSED_DATA_DIR`
 - テストデータの特徴量 `testData.mat` in `PROCESSED_DATA_DIR`
 

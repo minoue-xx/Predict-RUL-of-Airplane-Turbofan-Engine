@@ -26,8 +26,8 @@ RAW_DATA_DIR からデータ (`train_*.csv`, `test_*.csv`)を読み取り、
 
 上で整形したデータ（`train_*_.mat`, `train_*Unwrap_.mat`, 
 `test_*_.mat`, `test_*Unwrap_.mat`）から使用するデータだけを
-取り出した（`train_*Unwrap_OtherParam.mat', 
-`test_*Unwrap_OtherParam.mat'）を `PROCESSED_DATA_DIR` に保存し、
+取り出した（`train_*Unwrap_OtherParam.mat`, 
+`test_*Unwrap_OtherParam.mat`）を `PROCESSED_DATA_DIR` に保存し、
 さらに追加処理をしてトレーニングデータの特徴量 `trainData.mat` 
 とテストデータの特徴量 `testData.mat` を `PROCESSED_DATA_DIR` に保存。
 

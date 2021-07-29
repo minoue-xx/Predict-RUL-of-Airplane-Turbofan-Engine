@@ -659,7 +659,7 @@ writetable(output, fullfile(subdir, "submission.csv"))
 
 ```matlab:Code
 tmp = readtable(fullfile(subdir,"submission_ensemble_alldata_v9.csv"));
-sqrt((mean((tmp.Y(1:48)-Cfix).^2)))
+sqrt((mean((tmp.Y-output.Y).^2)))
 ```
 
 
