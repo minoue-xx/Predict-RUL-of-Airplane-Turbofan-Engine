@@ -1,12 +1,24 @@
 # 航空機ターボエンジンの残存耐用時間（RUL）予測
 
+
 Copyright 2021 Michio Inoue
+
+
+
 
 このコードでは論文で Model Health Parameters と紹介されている変数と、エンジンの状態評価に使用される変数として次の４つも使用する。T48, SmFan, SmLPC, SmHPC
 
+
+
+
 At present, the N-CMAPSS dataset contains eight sets of data from 128 units and seven different failure modes affecting the flow (F) and/or efficiency (E) of all the rotating sub-components. Table 2 provides an overview of flight classes and failure modes for each of the sets of data provided 
 
+
+
+
 とある通り、DS 番号によって入れ込まれている故障モードは様々なようなので、それぞれで挙動が異なることが想定される。変数名の一覧は以下の通り。
+
+
 
    1.  fan_eff_mod: Fan efficiency modifier (-) 
    1.  fan_flow_mod: Fan flow modifier (-) 
@@ -21,7 +33,10 @@ At present, the N-CMAPSS dataset contains eight sets of data from 128 units and 
 
 # 事前準備
 
+
 ディレクトリ情報の確保
+
+
 
 ```matlab:Code
 clear
@@ -29,34 +44,47 @@ settings = jsondecode(fileread('../settings.json'));
 datadir = settings.PROCESSED_DATA_DIR
 ```
 
+
 ```text:Output
 datadir = '../data/processed/'
 ```
+
 
 ```matlab:Code
 modeldir = settings.MODEL_DIR
 ```
 
+
 ```text:Output
 modeldir = '../models/'
 ```
+
 
 ```matlab:Code
 subdir = settings.SUBMISSION_DIR
 ```
 
+
 ```text:Output
 subdir = '../submissions/'
 ```
 
+
+
 DS (Data Set?) 名定義
+
+
 
 ```matlab:Code
 fileID = ["DS01-005", "DS02-006", "DS03-012", "DS04", "DS05", ...
     "DS06", "DS07", "DS08a-009", "DS08c-008"];
 ```
 
+
+
 変数名: 各 cycle での平均値を使用するので、平均値の変数名定義
+
+
 
 ```matlab:Code
 eff_mod_list = ["fan_eff_mod";"fan_flow_mod";"LPC_eff_mod";"LPC_flow_mod";...
@@ -71,7 +99,10 @@ meanvar_list = "mean" + var_list;
 
 # 平均値計算
 
+
 事前にデータは cycle 単位で分割し保存しているとします。loadData.mlx 参照。ここではさらに各 Model Health Parameter の cycle 単位での平均値を計算してデータ保存しておきます。
+
+
 
 ```matlab:Code
 % 一度作成すればOK
@@ -118,11 +149,15 @@ end
 
 # 特徴量作成
 
+
 以下でモデル学習に使用するためのデータを作成するが以下の点に注意。
+
+
 
    1.  Model Health Parameter は DS によって値を持つ変数が異なることが論文に記載されている。ただ DS02-006 の Unit 2, 5, 10 については１つの Health Parameter だけに変動が見られ、DS01-005 と同じ様相であるため、変数 DS は DS01-005 とする。 
    1.  また RUL が 100 である unit は、100 回目の実験で打ち切られた（すなわちまだ寿命ではない）データである可能性があるため、Fc = 1 のケース（本来寿命が長くなりがちのケース）で RUL = 100 のデータは学習データから取り除く。 
    1.  その他 Health Parameter の値については移動平均で滑らかにする、初期変動分を調整する、abnormal degredation 時（hs = 0）の傾きだけを別途評価するための変数を作成するなどの処理をする。 
+
 
 ```matlab:Code
 trainData = [];
@@ -236,7 +271,11 @@ end
 
 ```
 
+
+
 こんな様子のデータです。
+
+
 
 ```matlab:Code
 head(trainData)
@@ -253,7 +292,11 @@ head(trainData)
 |7|7|68|3|1|0|0|0|0|0|0|-2.0920e-04|0|0|0|1.6508e+03|18.7857|8.5636|27.8640|"DS01-005"|2|-1.8392e-04|6.4915e-04|1.5996|
 |8|8|67|3|1|0|0|0|0|0|0|-1.9452e-04|0|0|0|1.6075e+03|19.4445|8.2486|28.5761|"DS01-005"|2|-1.6924e-04|6.4915e-04|1.5996|
 
+
+
 保存
+
+
 
 ```matlab:Code
 save(fullfile(datadir,'trainData.mat'),'trainData')
@@ -277,20 +320,31 @@ subtestData = testData(:,["cycle",meanvar_list',"Fc","hs","DS","p1","p2","score1
 
 ## アンサンブル決定木の学習
 
+
 以下のハイパーパラメータもベイズ最適化でチューニングします。
+
+
 
    -  [`Method`](https://www.mathworks.com/help/releases/R2021a/stats/fitrensemble.html?s_tid=doc_ta#bvcj_tw-1-Method) — 使用可能な方式は `'Bag'` または `'LSBoost'` です。 
    -  [`NumLearningCycles`](https://www.mathworks.com/help/releases/R2021a/stats/fitrensemble.html?s_tid=doc_ta#bvcj_tw-1-NumLearningCycles) — `fitrensemble` は、既定では範囲 `[10,500]` の対数スケールで、正の整数を探索します。 
    -  [`LearnRate`](https://www.mathworks.com/help/releases/R2021a/stats/fitrensemble.html?s_tid=doc_ta#mw_0b7f0d4a-2aae-4c52-a876-a6cb06c15ba4) — `fitrensemble` は、既定では範囲 `[1e-3,1]` の対数スケールで、正の実数を探索します。 
    -  [`MinLeafSize`](https://www.mathworks.com/help/releases/R2021a/stats/fitrtree.html#bt6cr84-MinLeafSize) — `fitrensemble` は、範囲 `[1,max(2,floor(NumObservations/2))]` の対数スケールで整数を探索します。 
 
+
+
 単純に交差検定のためのデータ分割を行うだけなら 'OptimizeHyperparameters' オプションを 'auto' に設定するだけで良い（以下例）
+
+
 
 ```matlab:Code(Display)
 mdl = fitrensemble(trainData,'Y','OptimizeHyperparameters','auto');
 ```
 
+
+
 ただ、今回は同じ unit からのデータが学習用・検証用データ両方に存在しないように分ける必要があるので、以下のコード。
+
+
 
 ```matlab:Code
 rng(0)% 乱数シード固定（再現用）
@@ -314,6 +368,7 @@ results = bayesopt(fun,vars,'UseParallel',false,...
     'AcquisitionFunctionName',"expected-improvement-plus",...
     'MaxObjectiveEvaluations',50);
 ```
+
 
 ```text:Output
 |===================================================================================================================================|
@@ -380,9 +435,11 @@ results = bayesopt(fun,vars,'UseParallel',false,...
 |   50 | Accept |       3.922 |      3.7205 |      3.7037 |       3.822 |          Bag |          165 |    0.0027115 |           58 |
 ```
 
-![/Users/michio/Desktop/PHM/toshare/RULPrediction_images/figure_0.png
-](RULPrediction_images//Users/michio/Desktop/PHM/toshare/RULPrediction_images/figure_0.png
+
+![RULPrediction_images/figure_0.png
+](./RULPrediction_images/figure_0.png
 )
+
 
 ```text:Output
 __________________________________________________________
@@ -412,7 +469,11 @@ MaxObjectiveEvaluations の 50 に達しました。
 推定される関数評価時間 = 0.7578
 ```
 
+
+
 最適値において再学習
+
+
 
 ```matlab:Code
 optvars = results.XAtMinEstimatedObjective;
@@ -426,6 +487,7 @@ tmp = predictorImportance(mdl);
 [~,idx] = sort(tmp,'descend');
 mdl.PredictorNames(idx)'
 ```
+
 
 ```text:Output
 ans = 21x1 cell    
@@ -442,6 +504,7 @@ ans = 21x1 cell
 
 ```
 
+
 ```matlab:Code
 save(fullfile(modeldir,"model.mat"),'mdl');
 ```
@@ -454,9 +517,11 @@ predTrain = mdl.predict(subtrainData);
 norm(predTrain-subtrainData.Y)
 ```
 
+
 ```text:Output
 ans = 132.5295
 ```
+
 
 ```matlab:Code
 
@@ -467,13 +532,17 @@ plot(trainData.Y,'-')
 hold off
 ```
 
-![/Users/michio/Desktop/PHM/toshare/RULPrediction_images/figure_1.png
-](RULPrediction_images//Users/michio/Desktop/PHM/toshare/RULPrediction_images/figure_1.png
+
+![RULPrediction_images/figure_1.png
+](./RULPrediction_images/figure_1.png
 )
 
 # 学習データに対しての精度検証２
 
+
 現時点では各フライトサイクルにおける RUL を予測しているが、ここで RUL は本来であれば傾き -1 で単調減少することを反映させて、傾き -1 の直線に近似する。その時の cycle = 1 (初回フライト時) の Y の値をその unit の RUL とする。
+
+
 
 ```matlab:Code
 % unit 番号が変わるタイミングでデータを分割
@@ -500,11 +569,16 @@ for jj=1:size(idx,1)-1
 end
 ```
 
+
+
 cycle = 1 (初回フライト時) の Y の値をその unit の RUL として誤差評価
+
+
 
 ```matlab:Code
 [Cfix, Ctrue]
 ```
+
 
 ```text:Output
 ans = 49x2    
@@ -521,9 +595,11 @@ ans = 49x2
 
 ```
 
+
 ```matlab:Code
 sqrt(mean((Cfix-Ctrue).^2))
 ```
+
 
 ```text:Output
 ans = 1.7786
@@ -536,7 +612,11 @@ load(fullfile(modeldir,"model.mat"),'mdl');
 predTest = mdl.predict(subtestData);
 ```
 
+
+
 上と同様に直線近似を行い、cycle = 1 (初回フライト時) の Y の値をその unit の RUL とする。
+
+
 
 ```matlab:Code
 % こちらは各 unit で 40 cycle 分なので分けやすい
@@ -557,7 +637,11 @@ for jj=1:size(predTest,2)
 end
 ```
 
+
+
 結果の出力
+
+
 
 ```matlab:Code
 unit = reshape(testData.Unit, 40, []);
@@ -567,18 +651,27 @@ output = table(filename(1,:)',unit(1,:)',Cfix,'VariableNames',["filename","unit"
 writetable(output, fullfile(subdir, "submission.csv"))
 ```
 
+
+
 提出済の結果との等価性チェック
+
+
 
 ```matlab:Code
 tmp = readtable(fullfile(subdir,"submission_ensemble_alldata_v9.csv"));
 sqrt((mean((tmp.Y(1:48)-Cfix).^2)))
 ```
 
+
 ```text:Output
 ans = 0
 ```
 
+
+
 特徴量作成（Model Health Parameters の傾き）を計算（最適化を用いて曲線近似）するために使用する目的関数。
+
+
 
 ```matlab:Code
 function errors = myfun(x,data)
@@ -592,3 +685,4 @@ errors = norm(data(:,2)-yfit);
 end
 
 ```
+
